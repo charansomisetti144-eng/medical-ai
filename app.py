@@ -88,12 +88,12 @@ def calculate_risk_score(text):
         level = "LOW"
 
     return score, level
-FOURSQUARE_API_KEY = os.environ.get("FOURSQUARE_API_KEY")
+foursquare_api_key = os.environ.get("FOURSQUARE_API_KEY")
 headers = {
-    "Authorization": FOURSQUARE_API_KEY
+    "Authorization": foursquare_api_key
 }
 client = OpenAI(
-    API_KEY = os.getenv("API_KEY"),
+    api_key= os.getenv("API_KEY"),
     base_url="https://openrouter.ai/api/v1"
 )
 

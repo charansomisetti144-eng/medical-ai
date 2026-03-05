@@ -840,36 +840,21 @@ def analyze_report():
     if not file:
         return render_template("medical_report.html", analysis="No file uploaded.")
 
+
     content = ""
 
-    if file.filename.endswith(".pdf"):
-        temp_path = "temp_uploaded.pdf"
-        file.save(temp_path)
-
-        content = convert_from_path(temp_path)
-
-        os.remove(temp_path)
-
-    elif file.filename.endswith(".txt"):
+    if file.filename.endswith(".txt"):
         content = file.read().decode("utf-8")
+
+    elif file.filename.endswith(".pdf"):
+        pdf_reader = PyPDF2.PdfReader(file)
+        for page in pdf_reader.pages:
+            text = page.extract_text()
+            if text:
+                content += text
 
     else:
         return render_template("medical_report.html", analysis="Unsupported file type.")
-
-content = ""
-
-if file.filename.endswith(".txt"):
-    content = file.read().decode("utf-8")
-
-elif file.filename.endswith(".pdf"):
-    pdf_reader = PyPDF2.PdfReader(file)
-    for page in pdf_reader.pages:
-        text = page.extract_text()
-        if text:
-            content += text
-
-else:
-    return render_template("medical_report.html", analysis="Unsupported file type.")
 
     system_prompt = """
 You are a senior hospital consultant physician with 15+ years of clinical experience.

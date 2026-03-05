@@ -856,18 +856,20 @@ def analyze_report():
     else:
         return render_template("medical_report.html", analysis="Unsupported file type.")
 
-    content = ""
+content = ""
 
-    if file.filename.endswith(".txt"):
-        content = file.read().decode("utf-8")
+if file.filename.endswith(".txt"):
+    content = file.read().decode("utf-8")
 
-    elif file.filename.endswith(".pdf"):
-        pdf_reader = PyPDF2.PdfReader(file)
-        for page in pdf_reader.pages:
-            content += page.extract_text() or ""
+elif file.filename.endswith(".pdf"):
+    pdf_reader = PyPDF2.PdfReader(file)
+    for page in pdf_reader.pages:
+        text = page.extract_text()
+        if text:
+            content += text
 
-    else:
-        return render_template("medical_report.html", analysis="Unsupported file type.")
+else:
+    return render_template("medical_report.html", analysis="Unsupported file type.")
 
     system_prompt = """
 You are a senior hospital consultant physician with 15+ years of clinical experience.

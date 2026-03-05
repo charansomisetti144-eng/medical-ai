@@ -93,7 +93,7 @@ headers = {
     "Authorization": foursquare_api_key
 }
 client = OpenAI(
-    api_key= os.getenv("API_KEY"),
+    api_key= os.getenv("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1"
 )
 
@@ -1067,7 +1067,7 @@ def find_hospitals_fsq():
 
     headers = {
         "Accept": "application/json",
-        "Authorization": FOURSQUARE_API_KEY
+        "Authorization": foursquare_api_key
     }
 
     params = {

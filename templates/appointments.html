@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='medical-bg.jpg') }}"
+     style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<div class="appointment-wrapper">
+    <h1 id="appointment-title" class="appointment-title">🏥 Book Hospital Appointment</h1>
+    <p id="appointment-subtitle" class="appointment-subtitle">
+        Find trusted hospitals near your location and schedule your visit.
+    </p>
+
+    <div class="appointment-search">
+        <input type="text" id="location" placeholder="Enter your city (e.g. Vijayawada)">
+        <button id="search-btn" onclick="findHospitals()">Search Hospitals</button>
+        <button id="gps-btn" onclick="useLiveLocation()">📍 Use Live GPS</button>
+    </div>
+    <div id="loading-spinner" class="loading-spinner" style="display:none;">
+        <div class="spinner"></div>
+    </div>
+    <div id="map" style="height:400px; margin-top:40px; border-radius:15px;"></div>
+</div>
+    <div id="hospital-results" class="hospital-grid"></div>
+
+    <!-- MAP -->
+<div id="route-loading" class="loading-spinner" style="display:none;">
+    <div class="spinner"></div>
+</div>
+<!-- Leaflet CSS + JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+    let map;
+    let userMarker;
+    let hospitalMarkers = [];
+    let routeLine;
+
+    function initMap() {
+        map = L.map('map').setView([16.9478, 82.2420], 12);
+
+        L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            {
+                attribution: '&copy; OpenStreetMap contributors & CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }
+        ).addTo(map);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initMap();
+    });
+
+    // 📍 Live GPS
+    function useLiveLocation() {
+
+        if (!navigator.geolocation) {
+            alert("Geolocation not supported by your browser.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async function (position) {
+
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                if (userMarker) {
+                    map.removeLayer(userMarker);
+                }
+
+                userMarker = L.marker([lat, lon], {
+                    icon: L.icon({
+                        iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+                        iconSize: [30, 30]
+                    })
+                }).addTo(map).bindPopup("📍 You are here").openPopup();
+
+                map.setView([lat, lon], 13);
+
+                await findHospitalsByCoords(lat, lon);
+
+            },
+            function () {
+                alert("Location access denied.");
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    // 🔎 Manual Search
+    async function findHospitals() {
+        document.getElementById("loading-spinner").style.display = "flex";
+        const location = document.getElementById("location").value;
+
+        const response = await fetch("/find-hospitals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ location: location })
+        });
+
+        const data = await response.json();
+
+        document.getElementById("loading-spinner").style.display = "none";
+        showHospitals(data.hospitals);
+    }
+
+    async function findHospitalsByCoords(lat, lon) {
+
+        const response = await fetch("/find-hospitals-fsq", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lat: lat, lon: lon })
+        });
+
+        const data = await response.json();
+        showHospitals(data.hospitals);
+    }
+
+    // 🏥 Show Hospitals
+    function showHospitals(hospitals) {
+
+        hospitalMarkers.forEach(marker => map.removeLayer(marker));
+        hospitalMarkers = [];
+
+        let html = "";
+
+        hospitals.forEach(hospital => {
+
+            const marker = L.marker([hospital.lat, hospital.lon])
+                .addTo(map)
+                .bindPopup(`
+                <b>${hospital.name}</b><br>
+                <button onclick="drawRoute(${hospital.lat},${hospital.lon})">
+                    🧭 Get Route
+                </button>
+            `)
+                .bindTooltip(hospital.name, {
+                    direction: "top",
+                    offset: [0, -10]
+                });
+            hospitalMarkers.push(marker);
+
+            html += `
+            <div class="hospital-card">
+                <div class="hospital-info">
+                    <h3>🏥 ${hospital.name}</h3>
+                    <p>🩺 Type: ${hospital.healthcare}</p>
+                    <p>⏰ Hours: ${hospital.opening_hours}</p>
+                    <p>🚑 Emergency: ${hospital.emergency}</p>
+                    <p>📞 ${hospital.phone}</p>
+                    ${hospital.website ? `<a href="${hospital.website}" target="_blank">🌐 Visit Website</a>` : ""}
+                </div>
+
+                <div class="hospital-actions">
+                    <button onclick="drawRoute(${hospital.lat},${hospital.lon})">
+                        🧭 Route
+                    </button>
+                    <button onclick="bookAppointment('${hospital.name}')">
+                        📅 Book
+                    </button>
+                </div>
+            </div>
+        `;
+        });
+
+        document.getElementById("hospital-results").innerHTML = html;
+    }
+
+ window.drawRoute = function (destLat, destLon) {
+
+    let userLat, userLon;
+
+    if (userMarker) {
+        userLat = userMarker.getLatLng().lat;
+        userLon = userMarker.getLatLng().lng;
+    } else {
+        const center = map.getCenter();
+        userLat = center.lat;
+        userLon = center.lng;
+    }
+
+    showSpinner();
+
+    fetch(`https://router.project-osrm.org/route/v1/driving/${userLon},${userLat};${destLon},${destLat}?overview=full&geometries=geojson`)
+        .then(res => res.json())
+        .then(data => {
+
+            hideSpinner();
+
+            if (data.routes && data.routes.length > 0) {
+
+                const routeData = data.routes[0];
+
+                const route = routeData.geometry;
+                const distanceKm = (routeData.distance / 1000).toFixed(2);
+                const durationMin = Math.ceil(routeData.duration / 60);
+
+                if (window.routeLayer) {
+                    map.removeLayer(window.routeLayer);
+                }
+
+                window.routeLayer = L.geoJSON(route, {
+                    style: {
+                        color: "#00ff99",
+                        weight: 6,
+                        opacity: 0.9
+                    }
+                }).addTo(map);
+
+                map.fitBounds(window.routeLayer.getBounds());
+
+                // Show route info popup
+                L.popup()
+                    .setLatLng([destLat, destLon])
+                    .setContent(`
+                        <div style="color:white;">
+                            <b>🧭 Route Details</b><br><br>
+                            📏 Distance: ${distanceKm} km<br>
+                            ⏱ Duration: ${durationMin} mins
+                        </div>
+                    `)
+                    .openOn(map);
+
+            } else {
+                alert("No route found.");
+            }
+        })
+        .catch(err => {
+            hideSpinner();
+            alert("Route failed.");
+        });
+};
+
+    function showSpinner() {
+        document.getElementById("route-loading").style.display = "flex";
+    }
+
+    function hideSpinner() {
+        document.getElementById("route-loading").style.display = "none";
+    }
+</script>
+
+{% endblock %}

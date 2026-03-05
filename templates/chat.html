@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Medical AI Chat{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='chat-bg.jpg') }}"
+     style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<div class="chat-wrapper">
+
+    <div class="chat-header" id="chat-title">
+        <h2>🩺 Medical AI Doctor</h2>
+        <a href="/dashboard" id="chatback">← Back to Dashboard</a>
+    </div>
+
+    <div id="chat-box" class="chat-box">
+        <div class="bot-bubble" id="chat-welcome">
+            Hello 👋<br>
+            How can I assist you today?<br>
+            Please remember this is general medical guidance only.
+            here describe the symptoms you are experiencing
+        </div>
+    </div>
+    <div class="search-download-row">
+        <div class="symptom-search-container">
+            <input type="text" id="symptom-search" placeholder="Search or select symptom...">
+            <div id="symptom-results" class="symptom-results"></div>
+        </div>
+        <a href="/patient-details" class="download-btn" id="chat-download-btn">
+            Download Report (PDF)
+        </a>
+        <div class="chat-input-container">
+            <input type="text" id="user-input" placeholder="Describe your symptoms...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Marked.js -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const searchInput = document.getElementById("symptom-search");
+        const resultsBox = document.getElementById("symptom-results");
+        const userInput = document.getElementById("user-input");
+        const chatBox = document.getElementById("chat-box");
+
+        // ================= SEND MESSAGE =================
+        window.sendMessage = function () {
+
+            let message = userInput.value;
+
+            if (message.trim() === "") return;
+
+            chatBox.innerHTML += `<div class="user-bubble">${message}</div>`;
+
+            let typingDiv = document.createElement("div");
+            typingDiv.className = "bot-bubble typing-indicator";
+            typingDiv.innerHTML = `
+    <div class="typing">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+`;
+            chatBox.appendChild(typingDiv);
+            scrollToBottom();
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: message })
+            })
+                .then(res => res.json())
+                .then(data => {
+
+                    typingDiv.remove();
+
+                    let botDiv = document.createElement("div");
+                    botDiv.className = "bot-bubble fade-in";
+                    botDiv.innerHTML = marked.parse(data.reply);
+
+                    if (data.reply.includes("High")) {
+                        botDiv.classList.add("severity-high");
+                    }
+                    else if (data.reply.includes("Moderate")) {
+                        botDiv.classList.add("severity-medium");
+                    }
+                    else if (data.reply.includes("Low")) {
+                        botDiv.classList.add("severity-low");
+                    }
+
+                    chatBox.appendChild(botDiv);
+                    scrollToBottom();
+                });
+
+
+            userInput.value = "";
+            function scrollToBottom() {
+                const chatBox = document.querySelector(".chat-box");
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        };
+        userInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+        // ================= SYMPTOM DATABASE =================
+        const symptomsDatabase = {
+            "General": [
+                "Fever", "Cold", "Cough", "Fatigue", "Body pain", "Weakness", "Chills",
+                "Night sweats", "Weight loss", "Weight gain", "Loss of appetite",
+                "Excessive thirst", "Excessive hunger", "Dehydration", "Shivering",
+                "Sweating", "Mild pain", "Severe pain", "Low energy", "High temperature",
+                "Muscle pain", "Joint pain", "Swelling", "Redness", "Bruising",
+                "Skin rash", "Itching", "Hairloss", "Dry skin", "Pale skin",
+                "Back pain", "Neck pain", "Shoulder pain", "Knee pain", "Arm pain",
+                "Leg pain", "Chest discomfort", "General discomfort", "Malaise",
+                "Sleep problems", "Insomnia", "Snoring", "Head pressure",
+                "Light sensitivity", "Noise sensitivity", "Blurred vision",
+                "Dry mouth", "Bad breath", "Frequent urination", "Slow healing",
+                "Low immunity", "Frequent infections", "Faint feeling",
+                "Restlessness", "Anxiety feeling", "Mood swings", "Irritability",
+                "Memory issues", "Concentration problem", "Cold hands",
+                "Cold feet", "Hot flashes", "Puffy eyes", "Swollen face",
+                "Dry throat", "Blocked nose", "Runny nose", "Sneezing",
+                "Eye redness", "Watery eyes", "Ear pain", "Ear ringing",
+                "Loss of taste", "Loss of smell", "Mild dizziness",
+                "Motion sickness", "Muscle stiffness", "Hand tremor",
+                "Foot pain", "Heel pain", "Palm sweating", "Skin peeling",
+                "Dark circles", "Yellow eyes", "Low blood pressure feeling",
+                "High blood pressure feeling", "Heart racing", "Slow heartbeat",
+                "Chest tightness", "General inflammation", "Skin dryness",
+                "Low stamina", "High fatigue", "Mild headache", "Mild cough",
+                "Mild fever"
+            ],
+
+            "Respiratory": [
+                "Shortness of breath", "Wheezing", "Chest congestion", "Heavy breathing",
+                "Persistent cough", "Dry cough", "Wet cough", "Asthma symptoms",
+                "Lung pain", "Rapid breathing", "Breathing difficulty",
+                "Chest heaviness", "Sharp chest pain", "Choking sensation",
+                "Night cough", "Cough with mucus", "Cough with blood",
+                "Nasal congestion", "Sinus pain", "Sinus pressure",
+                "Throat tightness", "Hoarse voice", "Dry cough at night",
+                "Breathing pain", "Air hunger", "Allergic cough",
+                "Cold with cough", "Bronchitis symptoms", "Flu symptoms",
+                "Pneumonia symptoms", "Respiratory infection", "Blocked airway",
+                "Chronic cough", "Seasonal allergy", "Runny nose",
+                "Dry throat", "Lung irritation", "Sore chest",
+                "Breathlessness on walking", "Sudden breathlessness",
+                "Deep cough", "Chest vibration", "Cough after exercise",
+                "Smoking cough", "Cough in morning", "Sharp breathing pain",
+                "Rapid shallow breathing", "Chest pressure breathing",
+                "Lung tightness", "Allergy breathing problem"
+            ],
+
+            "Digestive": [
+                "Stomach pain", "Abdominal cramps", "Nausea", "Vomiting",
+                "Diarrhea", "Constipation", "Acidity", "Heartburn",
+                "Bloating", "Gas problem", "Indigestion",
+                "Stomach burning", "Loss of appetite", "Excess hunger",
+                "Food poisoning", "Stomach infection", "Loose motion",
+                "Hard stool", "Painful bowel movement", "Blood in stool",
+                "Black stool", "Burping", "Excess burping",
+                "Stomach swelling", "Upper abdomen pain", "Lower abdomen pain",
+                "Right side abdomen pain", "Left side abdomen pain",
+                "Liver pain", "Gallbladder pain", "Ulcer symptoms",
+                "Gastritis", "IBS symptoms", "Pancreas pain",
+                "Vomiting blood", "Dry heaving", "Reflux problem",
+                "Stomach tightness", "Sharp abdominal pain",
+                "Chronic stomach pain", "Digestive discomfort",
+                "After eating pain", "Stomach growling",
+                "Pain after spicy food", "Food intolerance",
+                "Milk intolerance", "Cramps after eating",
+                "Frequent burping", "Abdominal heaviness"
+            ],
+
+            "Neurological": [
+                "Headache", "Migraine", "Dizziness", "Vertigo",
+                "Fainting", "Seizure", "Memory loss", "Confusion",
+                "Numbness", "Tingling sensation", "Hand tremor",
+                "Foot tremor", "Muscle weakness", "Vision changes",
+                "Blurred vision", "Double vision", "Slurred speech",
+                "Slow speech", "Loss of balance", "Poor coordination",
+                "Head pressure", "Sudden headache", "Severe headache",
+                "Neck stiffness", "Facial numbness", "Arm numbness",
+                "Leg numbness", "Unsteady walking", "Brain fog",
+                "Difficulty concentrating", "Mood changes",
+                "Personality change", "Sleepiness", "Sudden fatigue",
+                "Light sensitivity", "Noise sensitivity",
+                "Head spinning", "Body shaking", "Uncontrolled movement",
+                "Sudden confusion", "Sudden weakness",
+                "Loss of consciousness", "Partial paralysis",
+                "Eye twitching", "Muscle twitching",
+                "Speech difficulty", "Slow reaction",
+                "Loss of awareness", "Sudden blackout"
+            ]
+        };
+        // ================= SEARCH FUNCTION =================
+        searchInput.addEventListener("input", function () {
+
+            const query = this.value.toLowerCase();
+            resultsBox.innerHTML = "";
+
+            if (query.length < 1) {
+                resultsBox.style.display = "none";
+                return;
+            }
+
+            let found = false;
+
+            Object.keys(symptomsDatabase).forEach(category => {
+                symptomsDatabase[category].forEach(symptom => {
+                    if (symptom.toLowerCase().includes(query)) {
+
+                        found = true;
+
+                        const div = document.createElement("div");
+                        div.className = "symptom-item";
+                        const highlighted = symptom.replace(
+                            new RegExp(query, "gi"),
+                            match => `<span style="color:#00f7ff;font-weight:bold;">${match}</span>`
+                        );
+
+                        div.innerHTML = highlighted;
+
+                        div.onclick = function () {
+                            userInput.value = "I have " + symptom;
+                            resultsBox.innerHTML = "";
+                            resultsBox.style.display = "none";
+                            searchInput.value = "";
+                        };
+
+                        resultsBox.appendChild(div);
+                    }
+                });
+            });
+
+            if (found) {
+                resultsBox.style.display = "block";
+            } else {
+                resultsBox.style.display = "none";
+            }
+        });
+
+    });
+
+
+</script>
+
+{% endblock %}

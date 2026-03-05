@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Medical Reports{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='report-bg.jpg') }}"
+     style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<!-- HEADER -->
+<div class="page-header">
+    <h1 id="report-title">Medical Report Analysis 🧾</h1>
+    <p id="report-subtitle">
+        Upload your medical report (PDF or TXT) and get instant AI health insights.
+    </p>
+</div>
+
+<!-- UPLOAD FORM -->
+<div class="report-section">
+    <form action="/analyze-report" method="POST" enctype="multipart/form-data" class="report-form">
+        <input type="file" name="report_file" accept=".pdf,.txt" required>
+        <button type="submit" class="submit-button" id="analyze-btn">
+            Analyze Report
+        </button>
+    </form>
+</div>
+
+<div class="analysis-container">
+
+    {% if score %}
+
+    <div class="risk-visual-container">
+
+        <!-- Circular Gauge -->
+        <div class="risk-gauge">
+            <svg width="200" height="200">
+                <circle cx="100" cy="100" r="85" class="gauge-bg" />
+                <circle cx="100" cy="100" r="85" class="gauge-fill" data-score="{{ score }}" stroke-dasharray="534"
+                    stroke-dashoffset="534" />
+            </svg>
+
+            <div class="gauge-text">
+                <span>{{ score }}</span>
+                <p>Risk Score</p>
+                <h4 class="
+                {% if severity == 'HIGH' %}severity-high
+                {% elif severity == 'MODERATE' %}severity-medium
+                {% else %}severity-low{% endif %}">
+                    {{ severity }}
+                </h4>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="risk-progress">
+            <div class="progress-bar 
+            {% if severity == 'HIGH' %}high
+            {% elif severity == 'MODERATE' %}moderate
+            {% else %}low{% endif %}" data-score="{{ score }}">
+            </div>
+        </div>
+        <div class="analysis-text">
+            <h3 style="margin-bottom:15px;">📝 AI Analysis</h3>
+            {{ analysis | safe | replace('\n', '<br>') }}
+        </div>
+
+        <!-- Buttons -->
+        <div class="report-actions">
+            <button onclick="previewPDF()" class="report-btn">
+                👁 Preview PDF
+            </button>
+
+            <a href="/download-report?download=true" class="report-btn">
+                📄 Download PDF
+            </a>
+        </div>
+
+    </div>
+
+    {% endif %}
+    <div id="pdf-preview-modal" class="pdf-modal" style="display:none;">
+        <div class="pdf-content">
+            <span class="close-btn" onclick="closePreview()">✖</span>
+            <iframe src="/download-report" width="100%" height="500px"></iframe>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top:40px;">
+    <a href="/dashboard" class="card-btn">⬅ Back to Dashboard</a>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const gauge = document.querySelector(".gauge-fill");
+        const progress = document.querySelector(".progress-bar");
+
+        if (gauge) {
+            const score = parseInt(gauge.getAttribute("data-score"));
+            const circumference = 534;
+            const offset = circumference - (score / 100) * circumference;
+
+            setTimeout(() => {
+                gauge.style.strokeDashoffset = offset;
+            }, 200);
+        }
+
+        if (progress) {
+            const score = progress.getAttribute("data-score");
+            setTimeout(() => {
+                progress.style.width = score + "%";
+            }, 300);
+        }
+
+    });
+
+    function previewPDF() {
+        document.getElementById("pdf-preview-modal").style.display = "flex";
+    }
+
+    function closePreview() {
+        document.getElementById("pdf-preview-modal").style.display = "none";
+    }
+</script>
+{% endblock %}

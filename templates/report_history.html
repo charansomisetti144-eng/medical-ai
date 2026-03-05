@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Report History{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='history-bg.jpg') }}"
+     style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<div class="history-container">
+
+    <!-- HEADER -->
+    <div class="history-header">
+        <h1 id="history-title">📊 Medical Report History</h1>
+        <p id="history-subtitle">Overview of all your analyzed reports</p>
+    </div>
+
+    {% if reports %}
+
+    <!-- ================= CHART SUMMARY ================= -->
+    <div class="chart-card">
+        <canvas id="riskChart"></canvas>
+    </div>
+
+    <!-- ================= REPORT LIST ================= -->
+    {% for report in reports %}
+    <div class="history-card">
+
+        <div class="history-top">
+            <div>
+                <h3>Report #{{ report.id }}</h3>
+                <p class="history-date">{{ report.created_at }}</p>
+            </div>
+
+            <div class="
+                {% if report.severity == 'HIGH' %}severity-high
+                {% elif report.severity == 'MODERATE' %}severity-medium
+                {% else %}severity-low{% endif %}">
+                {{ report.severity }}
+            </div>
+        </div>
+
+        <div class="mini-progress">
+            <div class="
+                mini-bar
+                {% if report.severity == 'HIGH' %}high
+                {% elif report.severity == 'MODERATE' %}moderate
+                {% else %}low{% endif %}" style="width: {{ report.risk_score }}%;">
+            </div>
+        </div>
+
+        <div class="history-actions">
+            <button onclick="viewReport({{ report.id }})" class="history-btn">
+                👁 View
+            </button>
+
+            <a href="/download-report?report_id={{ report.id }}" class="history-btn">
+                📄 Download
+            </a>
+        </div>
+
+        <div id="report-content-{{ report.id }}" style="display:none;">
+            {{ report.ai_analysis }}
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="no-reports" id="no-reports-text">
+        No reports found.
+    </div>
+    {% endif %}
+
+</div>
+<!-- ================= VIEW MODAL ================= -->
+<div id="viewModal" class="pdf-modal" style="display:none;">
+    <div class="pdf-content">
+        <span class="close-btn" onclick="closeModal()">✖</span>
+        <div id="modalReportContent" class="analysis-text"></div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ================= VIEW MODAL ================= -->
+
+<script>
+function viewReport(id) {
+
+    const element = document.getElementById("report-content-" + id);
+
+    if (!element) {
+        console.error("Report content not found for ID:", id);
+        return;
+    }
+
+    let content = element.innerHTML;
+
+    // 🔥 Convert escaped <br/> into real HTML breaks
+    content = content.replace(/&lt;br\/?&gt;/gi, "<br/>");
+
+    // Convert numbered sections into headings
+    content = content.replace(/^(\d+)\s/gm, "<br/><strong>$1. </strong>");
+
+    // Convert dash lines into bullet points
+    content = content.replace(/- /g, "<br/>• ");
+
+    // Highlight Risk Score
+    content = content.replace(/Risk Score:\s*(\d+)/gi,
+        '<span style="color:#00f7ff;font-weight:bold;">Risk Score: $1</span>');
+
+    // Highlight Severity
+    content = content.replace(/Severity Level:\s*(\w+)/gi, function (match, p1) {
+        let color = "#00ff88";
+        if (p1.toUpperCase() === "HIGH") color = "#ff4d4d";
+        if (p1.toUpperCase() === "MODERATE") color = "orange";
+        return `<span style="color:${color};font-weight:bold;">Severity Level: ${p1}</span>`;
+    });
+
+    document.getElementById("modalReportContent").innerHTML = content;
+    document.getElementById("viewModal").style.display = "flex";
+}
+    function closeModal() {
+        document.getElementById("viewModal").style.display = "none";
+    }
+
+    // ---------------- CHART ----------------
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const chartCanvas = document.getElementById('riskChart');
+
+        if (!chartCanvas) return;  // 👈 prevents error
+
+        const scores = [
+            {% for report in reports %}
+            {{ report.risk_score }},
+        {% endfor %}
+        ];
+
+    if (scores.length === 0) return; // 👈 extra safety
+
+    new Chart(chartCanvas, {
+        type: 'line',
+        data: {
+            labels: scores.map((_, i) => "Report " + (i + 1)),
+            datasets: [{
+                label: 'Risk Score',
+                data: scores,
+                borderColor: '#00f7ff',
+                backgroundColor: 'rgba(0,247,255,0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#fff' }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#aaa' }
+                },
+                y: {
+                    ticks: { color: '#aaa' },
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    });
+</script>
+
+{% endblock %}

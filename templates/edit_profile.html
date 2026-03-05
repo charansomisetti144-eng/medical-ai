@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='edit-bg.jpg') }}"
+     style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<div class="profile-edit-card">
+
+    <form id="profileForm" enctype="multipart/form-data">
+
+        <div class="photo-section">
+            <img src="{{ url_for('static', filename='profile_images/' + (user.profile_image if user.profile_image else 'default.png')) }}"
+                class="profile-photo-preview">
+
+            <input type="file" name="profile_image">
+        </div>
+
+        <input type="text" name="name" value="{{ user.username }}" placeholder="Full Name" required>
+        <input type="email" name="email" value="{{ user.email }}" placeholder="Email" required>
+        <input type="text" name="phone" value="{{ user.phone }}" placeholder="Phone">
+
+        <button type="submit" class="save-btn">Save Changes</button>
+
+    </form>
+
+    <hr>
+
+    <form id="passwordForm">
+        <input type="password" name="current_password" placeholder="Current Password" required>
+        <input type="password" name="new_password" placeholder="New Password" required>
+
+        <button type="submit" class="save-btn">Change Password</button>
+    </form>
+
+</div>
+
+<div id="successToast" class="toast"></div>
+
+<script>
+    document.getElementById("profileForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch("/save-profile", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    showToast("✔ Profile Updated Successfully");
+                }
+            });
+    });
+
+    document.getElementById("passwordForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch("/change-password", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    showToast("✔ Password Changed Successfully");
+                } else {
+                    showToast("❌ " + data.message);
+                }
+            });
+    });
+
+    function showToast(message) {
+        const toast = document.getElementById("successToast");
+        toast.innerText = message;
+        toast.classList.add("show");
+
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+    }
+</script>
+{% endblock %}

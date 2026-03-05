@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% block title %}Medical AI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="dashboard-container">
+        <div class="language-switcher">
+            <select id="language-select" onchange="setLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="te">Telugu</option>
+            </select>
+        </div>
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <h2 id="chatbot-title" class="logo">
+                Medical AI<br>
+                <span class="small-logo">web app</span>
+            </h2>
+
+            <nav class="sidebar-links">
+
+                <a id="nav-home" href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                    Home
+                </a>
+
+                <a id="nav-appointments" href="/appointments"
+                    class="{% if active_page == 'appointments' %}active{% endif %}">
+                    Appointments
+                </a>
+
+                <a id="nav-report-analysis" href="/medical-report"
+                    class="{% if active_page == 'medical-report' %}active{% endif %}">
+                    Medical Reports
+                </a>
+
+                <a id="nav-reports" href="/report-history"
+                    class="{% if active_page == 'report-history' %}active{% endif %}">
+                    Reports
+                </a>
+
+                <a id="nav-ai-chat" href="/ai-chat" class="{% if active_page == 'ai-chat' %}active{% endif %}">
+                    AI Chat
+                </a>
+
+                <a id="nav-profile" href="/profile" class="{% if active_page == 'profile' %}active{% endif %}">
+                    Profile
+                </a>
+
+                <a id="nav-logout" href="/logout" class="logout-btn">
+                    Logout
+                </a>
+
+            </nav>
+        </div>
+
+        <!-- PAGE CONTENT -->
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+
+    </div>
+    <script>
+        const translations = {
+            en: {
+                welcome: "Welcome",
+                home: "Home",
+                appointments: "Appointments",
+                medicalreport: "Medical Report Analysis",
+                reports: "Medical Reports",
+                aichat: "AI Chat",
+                profile: "Profile",
+                logout: "Logout",
+                dashboardDesc: "This is Your Medical AI Dashboard.",
+                cardAppointments: "Appointments",
+                cardReports: "Medical Reports",
+                cardChat: "AI Chat",
+                cardDescAppointments: "View and manage appointments.",
+                cardDescReports: "Upload and analyze reports.",
+                cardDescChat: "Chat with medical assistant.",
+                chatbot: "Medical AI Web App",
+                homeDesc1: "Manage your appointments, upload medical reports, and get instant AI-powered medical guidance — all in one secure platform.",
+                homeDesc2: "Our system analyzes symptoms, evaluates risk levels, and provides smart health insights with severity detection.",
+                highlight1: "🔐 Secure",
+                highlight2: "⚡ Fast AI Analysis",
+                highlight3: "🧠 Smart Diagnosis",
+                highlight4: "🌍 Multi-language Support",
+                appointmentTitle: "🏥 Book Hospital Appointment",
+                appointmentSubtitle: "Find trusted hospitals near your location and schedule your visit.",
+                searchBtn: "Search Hospitals",
+                gpsBtn: "📍 Use Live GPS",
+                reportTitle: "Medical Report Analysis 🧾",
+                reportSubtitle: "Upload your medical report (PDF or TXT) and get instant AI health insights.",
+                analyzeBtn: "Analyze Report",
+                downloadReportBtn: "Download PDF",
+                historyTitle: "Medical Report History",
+                historySubtitle: "Overview of all your analyzed reports",
+                noReports: "No reports found.",
+                chatTitle: "Medical AI Doctor",
+                chatBack: "← Back to Dashboard",
+                chatSend: "Send",
+                chatDownload: "Download Report (PDF)",
+                chatWelcome: "Hello 👋\nHow can I assist you today?\nPlease remember this is general medical guidance only.",
+                chatPlaceholder: "Describe your symptoms...",
+                symptomPlaceholder: "Search or select symptom..."
+            },
+            hi: {
+                welcome: "स्वागत है",
+                home: "होम",
+                appointments: "अपॉइंटमेंट्स",
+                medicalreport: "मेडिकल रिपोर्ट विश्लेषण",
+                reports: "मेडिकल रिपोर्ट्स",
+                aichat: "एआई चैट",
+                profile: "प्रोफाइल",
+                logout: "लॉगआउट",
+                dashboardDesc: "यह आपका मेडिकल एआई डैशबोर्ड है।",
+                cardAppointments: "अपॉइंटमेंट्स",
+                cardReports: "मेडिकल रिपोर्ट्स",
+                cardChat: "एआई चैट",
+                cardDescAppointments: "अपॉइंटमेंट्स देखें और प्रबंधित करें।",
+                cardDescReports: "रिपोर्ट अपलोड करें और विश्लेषण करें।",
+                cardDescChat: "मेडिकल सहायक से चैट करें।",
+                chatbot: "मेडिकल एआई वेब ऐप",
+                homeDesc1: "अपॉइंटमेंट्स प्रबंधित करें, मेडिकल रिपोर्ट अपलोड करें और तुरंत एआई आधारित स्वास्थ्य मार्गदर्शन प्राप्त करें — एक सुरक्षित प्लेटफॉर्म में।",
+                homeDesc2: "हमारा सिस्टम लक्षणों का विश्लेषण करता है, जोखिम स्तर का मूल्यांकन करता है और गंभीरता पहचान के साथ स्मार्ट स्वास्थ्य सुझाव देता है।",
+                highlight1: "🔐 सुरक्षित",
+                highlight2: "⚡ तेज एआई विश्लेषण",
+                highlight3: "🧠 स्मार्ट निदान",
+                highlight4: "🌍 बहुभाषी समर्थन",
+                appointmentTitle: "🏥 अस्पताल अपॉइंटमेंट बुक करें",
+                appointmentSubtitle: "अपने स्थान के पास विश्वसनीय अस्पताल खोजें और अपनी यात्रा निर्धारित करें।",
+                searchBtn: "अस्पताल खोजें",
+                gpsBtn: "📍 लाइव जीपीएस का उपयोग करें",
+                reportTitle: "मेडिकल रिपोर्ट विश्लेषण 🧾",
+                reportSubtitle: "अपनी मेडिकल रिपोर्ट (PDF या TXT) अपलोड करें और तुरंत एआई स्वास्थ्य विश्लेषण प्राप्त करें।",
+                analyzeBtn: "रिपोर्ट विश्लेषण करें",
+                downloadReportBtn: "पीडीएफ डाउनलोड करें",
+                historyTitle: "मेडिकल रिपोर्ट इतिहास",
+                historySubtitle: "आपकी सभी विश्लेषित रिपोर्टों का अवलोकन",
+                noReports: "कोई रिपोर्ट उपलब्ध नहीं है।",
+                chatTitle: "मेडिकल एआई डॉक्टर",
+                chatBack: "← डैशबोर्ड पर वापस जाएँ",
+                chatSend: "भेजें",
+                chatDownload: "रिपोर्ट डाउनलोड करें (PDF)",
+                chatWelcome: "नमस्ते 👋\nमैं आपकी आज कैसे मदद कर सकता हूँ?\nकृपया ध्यान दें यह केवल सामान्य चिकित्सा मार्गदर्शन है।",
+                chatPlaceholder: "अपने लक्षण बताएं...",
+                symptomPlaceholder: "लक्षण खोजें..."
+            },
+            te: {
+                welcome: "స్వాగతం",
+                home: "హోమ్",
+                appointments: "అపాయింట్‌మెంట్లు",
+                medicalreport: "మెడికల్ రిపోర్ట్ విశ్లేషణ",
+                reports: "మెడికల్ రిపోర్ట్స్",
+                aichat: "ఏఐ చాట్",
+                profile: "ప్రొఫైల్",
+                logout: "లాగ్ అవుట్",
+                dashboardDesc: "ఇది మీ మెడికల్ ఏఐ డాష్‌బోర్డ్.",
+                cardAppointments: "అపాయింట్‌మెంట్లు",
+                cardReports: "మెడికల్ రిపోర్ట్స్",
+                cardChat: "ఏఐ చాట్",
+                cardDescAppointments: "అపాయింట్‌మెంట్లను చూడండి మరియు నిర్వహించండి.",
+                cardDescReports: "రిపోర్టులను అప్లోడ్ చేసి విశ్లేషించండి.",
+                cardDescChat: "మెడికల్ సహాయకుడితో చాట్ చేయండి.",
+                chatbot: "మెడికల్ ఏఐ వెబ్ యాప్",
+                homeDesc1: "మీ అపాయింట్‌మెంట్‌లను నిర్వహించండి, మెడికల్ రిపోర్టులను అప్లోడ్ చేయండి మరియు తక్షణ ఏఐ ఆధారిత ఆరోగ్య సూచనలు పొందండి — ఒకే సురక్షిత వేదికలో.",
+                homeDesc2: "మా సిస్టమ్ లక్షణాలను విశ్లేషిస్తుంది, ప్రమాద స్థాయిని అంచనా వేస్తుంది మరియు తీవ్రత గుర్తింపుతో స్మార్ట్ ఆరోగ్య సూచనలు అందిస్తుంది.",
+                highlight1: "🔐 సురక్షితం",
+                highlight2: "⚡ వేగవంతమైన ఏఐ విశ్లేషణ",
+                highlight3: "🧠 స్మార్ట్ నిర్ధారణ",
+                highlight4: "🌍 బహుభాషా మద్దతు",
+                appointmentTitle: "🏥 ఆసుపత్రి అపాయింట్‌మెంట్ బుక్ చేయండి",
+                appointmentSubtitle: "మీ స్థానం సమీపంలోని విశ్వసనీయ ఆసుపత్రులను కనుగొని మీ సందర్శనను షెడ్యూల్ చేయండి.",
+                searchBtn: "ఆసుపత్రులు వెతకండి",
+                gpsBtn: "📍 లైవ్ GPS ఉపయోగించండి",
+                reportTitle: "మెడికల్ రిపోర్ట్ విశ్లేషణ 🧾",
+                reportSubtitle: "మీ మెడికల్ రిపోర్ట్ (PDF లేదా TXT) అప్లోడ్ చేసి తక్షణ ఏఐ ఆరోగ్య విశ్లేషణ పొందండి.",
+                analyzeBtn: "రిపోర్ట్ విశ్లేషించండి",
+                downloadReportBtn: "పిడిఎఫ్ డౌన్‌లోడ్",
+                historyTitle: "మెడికల్ రిపోర్ట్ చరిత్ర",
+                historySubtitle: "మీ అన్ని విశ్లేషించిన రిపోర్టుల సమీక్ష",
+                noReports: "ఎటువంటి రిపోర్టులు లేవు.",
+                chatTitle: "మెడికల్ ఏఐ డాక్టర్",
+                chatBack: "← డాష్‌బోర్డ్‌కు తిరిగి వెళ్లండి",
+                chatSend: "పంపండి",
+                chatDownload: "రిపోర్ట్ డౌన్‌లోడ్ (PDF)",
+                chatWelcome: "హలో 👋\nనేను మీకు ఈరోజు ఎలా సహాయం చేయగలను?\nఇది సాధారణ వైద్య మార్గదర్శకమే అని గుర్తుంచుకోండి.",
+                chatPlaceholder: "మీ లక్షణాలను వివరించండి...",
+                symptomPlaceholder: "లక్షణం వెతకండి..."
+            }
+        };
+        function updateText(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerText = value;
+            }
+        }
+
+        function setLanguage(lang) {
+
+            const popup = document.getElementById("language-popup");
+            if (popup) popup.style.display = "none";
+
+            updateText("welcome-text", translations[lang].welcome + " {{ username }} 👋");
+            updateText("dashboard-desc", translations[lang].dashboardDesc);
+
+            updateText("nav-home", translations[lang].home);
+            updateText("nav-appointments", translations[lang].appointments);
+            updateText("nav-report-analysis", translations[lang].medicalreport);
+            updateText("nav-reports", translations[lang].reports);
+            updateText("nav-ai-chat", translations[lang].aichat);
+            updateText("nav-profile", translations[lang].profile);
+            updateText("nav-logout", translations[lang].logout);
+
+            updateText("card-appointments", translations[lang].cardAppointments);
+            updateText("card-reports", translations[lang].cardReports);
+            updateText("card-chat", translations[lang].cardChat);
+
+            updateText("card-desc-appointments", translations[lang].cardDescAppointments);
+            updateText("card-desc-reports", translations[lang].cardDescReports);
+            updateText("card-desc-chat", translations[lang].cardDescChat);
+
+            updateText("chatbot-title", translations[lang].chatbot);
+            updateText("home-desc-1", translations[lang].homeDesc1);
+            updateText("home-desc-2", translations[lang].homeDesc2);
+
+            updateText("highlight-1", translations[lang].highlight1);
+            updateText("highlight-2", translations[lang].highlight2);
+            updateText("highlight-3", translations[lang].highlight3);
+            updateText("highlight-4", translations[lang].highlight4);
+            updateText("appointment-title", translations[lang].appointmentTitle);
+            updateText("appointment-subtitle", translations[lang].appointmentSubtitle);
+            updateText("search-btn", translations[lang].searchBtn);
+            updateText("gps-btn", translations[lang].gpsBtn);
+
+            updateText("report-title", translations[lang].reportTitle);
+            updateText("report-subtitle", translations[lang].reportSubtitle);
+            updateText("analyze-btn", translations[lang].analyzeBtn);
+            updateText("download-report-btn", translations[lang].downloadReportBtn);
+
+            updateText("history-title", translations[lang].historyTitle);
+            updateText("history-subtitle", translations[lang].historySubtitle);
+            updateText("no-reports-text", translations[lang].noReports);
+
+            updateText("chat-title", translations[lang].chatTitle);
+            updateText("chat-back", translations[lang].chatBack);
+            updateText("chat-send-btn", translations[lang].chatSend);
+            updateText("chat-download-btn", translations[lang].chatDownload);
+            updateText("chat-welcome", translations[lang].chatWelcome);
+
+            const userInput = document.getElementById("user-input");
+            if (userInput) userInput.placeholder = translations[lang].chatPlaceholder;
+
+            const symptomInput = document.getElementById("symptom-search");
+            if (symptomInput) symptomInput.placeholder = translations[lang].symptomPlaceholder;
+
+            fetch("/set_language", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ language: lang })
+            });
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+
+            fetch("/get-language")
+                .then(response => response.json())
+                .then(data => {
+
+                    const lang = data.language || "en";
+
+                    document.getElementById("language-select").value = lang;
+
+                    setLanguage(lang);
+                });
+        });
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("show");
+        }
+    </script>
+</body>
+
+</html>

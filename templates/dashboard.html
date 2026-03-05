@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- LANGUAGE POPUP -->
+<div id="language-popup" class="language-popup">
+    <div class="language-box">
+        <h3>Select Language 🌍</h3>
+        <button onclick="setLanguage('en')">English</button>
+        <button onclick="setLanguage('hi')">Hindi</button>
+        <button onclick="setLanguage('te')">Telugu</button>
+    </div>
+</div>
+<img src="{{ url_for('static', filename='dashboard-bg.jpg') }}"      
+    style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<h1 id="welcome-text">Welcome</h1>
+<p id="dashboard-desc" class="home-subtitle">
+    This is your Medical AI Dashboard.
+</p>
+
+<div class="home-description">
+    <p id="home-desc-1">
+        Manage your appointments, upload medical reports,
+        and get instant AI-powered medical guidance —
+        all in one secure platform.
+    </p>
+
+    <p id="home-desc-2">
+        Our system analyzes symptoms, evaluates risk levels,
+        and provides smart health insights with severity detection.
+    </p>
+</div>
+
+<div class="home-highlight">
+    <span id="highlight-1">🔐 Secure</span>
+    <span id="highlight-2">⚡ Fast AI Analysis</span>
+    <span id="highlight-3">🧠 Smart Diagnosis</span>
+    <span id="highlight-4">🌍 Multi-language Support</span>
+</div>
+
+<div class="cards">
+
+    <a href="/appointments" style="text-decoration:none;">
+        <div class="card">
+            <h3 id="card-appointments">Appointments</h3>
+            <p id="card-desc-appointments">
+                View and manage appointments.
+            </p>
+        </div>
+    </a>
+
+    <a href="/medical-report" style="text-decoration:none;">
+        <div class="card">
+            <h3 id="card-reports">Medical Reports</h3>
+            <p id="card-desc-reports">
+                Upload and analyze reports.
+            </p>
+        </div>
+    </a>
+
+    <a href="/ai-chat" style="text-decoration:none;">
+        <div class="card">
+            <h3 id="card-chat">AI Chat</h3>
+            <p id="card-desc-chat">
+                Chat with medical assistant.
+            </p>
+        </div>
+    </a>
+
+</div>
+
+{% endblock %}

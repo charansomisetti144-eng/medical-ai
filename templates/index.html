@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup Form</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?=v2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+</head>
+
+<body>
+
+    <img src="{{ url_for('static', filename='login-bg.jpg') }}" class="bg">
+    <div class="auth-container" id="container">
+
+        <!-- IMAGE PANEL -->
+
+        <div class="image-panel">
+
+            <img src="{{ url_for('static', filename='logo.png') }}">
+
+
+        </div>
+
+
+        <!-- FORM PANEL -->
+
+        <div class="form-panel">
+
+            <!-- SIGNUP FORM -->
+
+            <form class="form signup" method="POST" action="/register">
+
+                <h1>Create Account</h1>
+
+                <input name="first_name" placeholder="First Name" required>
+                <input name="last_name" placeholder="Last Name" required>
+                <input name="email" type="email" placeholder="Email" required>
+                <input name="password" type="password" placeholder="Password" required>
+
+                <button type="submit">Create Account</button>
+
+                <p>Already have account?
+                    <span id="loginBtn">Login</span>
+                </p>
+
+            </form>
+
+
+            <!-- LOGIN FORM -->
+
+            <form class="form login" method="POST" action="/login">
+
+                <h1>Login</h1>
+
+                <input name="email" type="email" placeholder="Email" required>
+                <input name="password" type="password" placeholder="Password" required>
+
+                <button type="submit">Login</button>
+
+                <p>No account?
+                    <span id="signupBtn">Create</span>
+                </p>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

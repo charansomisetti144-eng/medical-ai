@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='profile-bg.jpg') }}"
+     style="
+     position:fixed;
+     top:0;
+     left:0;
+     width:100%;
+     height:100%;
+     object-fit:cover;
+     z-index:-1;
+     opacity:0.5;">
+<div class="profile-container">
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header-card">
+        <div class="profile-avatar-large">
+            {{ username[0]|upper }}
+        </div>
+
+        <div class="profile-header-info">
+            <h2>{{ username }}</h2>
+            <p class="profile-email">{{ email }}</p>
+            <span class="profile-badge">Active Member</span>
+        </div>
+
+        <a href="/edit-profile" class="edit-btn">✏ Edit Details</a>
+    </div>
+
+    <!-- PROFILE DETAILS GRID -->
+    <div class="profile-details-grid">
+
+        <div class="profile-detail-card">
+            <h4>👤 Full Name</h4>
+            <p>{{ username }}</p>
+        </div>
+
+        <div class="profile-detail-card">
+            <h4>📧 Email</h4>
+            <p>{{ email }}</p>
+        </div>
+
+        <div class="profile-detail-card">
+            <h4>📅 Member Since</h4>
+            <p>{{ created_at }}</p>
+        </div>
+
+        <div class="profile-detail-card">
+            <h4>🔐 Account Status</h4>
+            <p>Verified</p>
+        </div>
+
+    </div>
+
+    <!-- ACCOUNT ACTIVITY -->
+    <div class="profile-activity-section">
+        <h3>📊 Account Overview</h3>
+
+        <div class="activity-stats">
+            <div class="stat-box">
+                <h2>{{ total_reports }}</h2>
+                <p>Reports Uploaded</p>
+            </div>
+
+            <div class="stat-box">
+                <h2>{{ total_appointments }}</h2>
+                <p>Appointments Booked</p>
+            </div>
+
+            <div class="stat-box">
+                <h2>{{ total_chats }}</h2>
+                <p>AI Consultations</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
